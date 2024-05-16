@@ -104,3 +104,45 @@ function renderUsers(arrayUsers) {
 }
 
 renderUsers(baseUsers);
+
+
+// Función para ordenar a los usuarios
+// todo: Editar la función para que ordene a los usuarios en la API
+document.getElementById("sortAsc").addEventListener("click", sortAsc);
+document.getElementById("sortDesc").addEventListener("click", sortDesc);
+
+function sortAsc() {
+  const collator = new Intl.Collator(undefined, {
+    sensitivity: 'base'
+  });
+  baseUsers.sort((a, b) => {
+    return collator.compare(a.fullname, b.fullname)
+  });
+  renderUsers(baseUsers);
+}
+
+function sortDesc() {
+  const collator = new Intl.Collator(undefined, {
+    sensitivity: 'base'
+  });
+  baseUsers.sort((a, b) => {
+    return collator.compare(b.fullname, a.fullname)
+  });
+  renderUsers(baseUsers);
+}
+
+// Función para buscar a los usuarios
+inputSearchHTML.addEventListener("keyup", (evento) => inputSearch(evento));
+function inputSearch(evt) {
+    const search = evt.target.value.toLowerCase();
+    const filteredUsers = baseUsers.filter((usr) => {
+      if (usr.fullname.toLowerCase().includes(search)) {
+        return true;
+      }
+      return false;
+    })
+    renderUsers(filteredUsers);
+  }
+// todo: Función para agregar usuarios nuevos
+// todo: Función para editar a los usuarios por ID
+// todo: Función para borrar a los usuarios por ID
