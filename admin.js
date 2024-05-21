@@ -1,148 +1,280 @@
-const baseUsers = [
-  {
-    fullname: "Andy Miller",
-    email: "Kyler.Schmeler@yahoo.com",
-    phone: "(712) 411-1027 x032",
-    bornDate: "1954-02-21T14:05:38.998Z",
-    id: "1",
-  },
-  {
-    fullname: "Dr. Glenda Parisian",
-    email: "Walter_Pacocha@gmail.com",
-    phone: "307.690.2924 x77563",
-    bornDate: "1960-02-06T00:28:33.017Z",
-    id: "2",
-  },
-  {
-    fullname: "Wilbur Leuschke Jr.",
-    email: "Eda_Renner43@gmail.com",
-    phone: "499.444.2811",
-    bornDate: "1968-09-22T09:40:26.035Z",
-    id: "3",
-  },
-  {
-    fullname: "Jose Ortiz",
-    email: "Enrique_Nicolas@hotmail.com",
-    phone: "986.783.7513 x83405",
-    bornDate: "1983-03-04T18:05:45.304Z",
-    id: "4",
-  },
-  {
-    fullname: "Cecilia Hoppe",
-    email: "Janie.Schulist@hotmail.com",
-    phone: "367.780.0197 x62457",
-    bornDate: "1958-03-21T09:02:43.322Z",
-    id: "5",
-  },
-  {
-    fullname: "Clifton Graham",
-    email: "Toy_Hamill17@gmail.com",
-    phone: "1-919-981-1071 x856",
-    bornDate: "1973-09-05T17:43:41.255Z",
-    id: "6",
-  },
-  {
-    fullname: "Sheila Moen",
-    email: "Alan_Dickens@hotmail.com",
-    phone: "1-965-886-4462 x076",
-    bornDate: "1993-10-22T01:22:14.713Z",
-    id: "7",
-  },
-  {
-    fullname: "Jenna Ernser",
-    email: "Emmalee0@gmail.com",
-    phone: "1-513-448-5219",
-    bornDate: "1989-02-16T11:41:17.353Z",
-    id: "8",
-  },
-  {
-    fullname: "Ms. Pearl Schaden",
-    email: "Nikolas.Jenkins7@gmail.com",
-    phone: "(404) 536-7351 x75204",
-    bornDate: "1996-10-06T19:13:10.063Z",
-    id: "9",
-  },
-  {
-    fullname: "Gregg Hodkiewicz",
-    email: "Aliza91@gmail.com",
-    phone: "937.434.3240 x6967",
-    bornDate: "1972-02-25T08:25:40.933Z",
-    id: "10",
-  },
-];
-
 // URL base para trabajar con la API
-const baseUrl = "https://6622ed3e3e17a3ac846e404e.mockapi.io/api/";
+const baseUrl = "https://6622ed3e3e17a3ac846e404e.mockapi.io/api";
 
 // Consigo los elementos del DOM para manipularlos
 const tableHTML = document.getElementById("table-container");
 const inputSearchHTML = document.getElementById("user-search");
 const tableBodyHTML = document.getElementById("table-body");
 const userFormHTML = document.getElementById("user-form");
-const btnSumbitHTML = userFormHTML.querySelector('button[type="submit"]');
+const formTitleHTML = document.getElementById("form-title");
+const btnSubmitHTML = userFormHTML.querySelector('button[type="submit"]');
 const formContainerHTML = document.querySelector(".user-form-container");
+
+// Variable para guardar a los usuarios
+let users = [];
+
+// Variable para saber si se está editando un usuario
+let isEditing = null;
+
+// Función para conseguir a los usuarios de la API
+getUsers();
+
+function getUsers() {
+  axios
+    .get(`${baseUrl}/users`)
+    .then((respuesta) => {
+      users = respuesta.data;
+      renderUsers(users);
+    })
+    .catch((error) => {
+      Swal.fire({
+        icon: "error",
+        title: "¡Algo salió mal!",
+        text: "No se pudo realizar la carga de usuarios ❌",
+      });
+      console.log("Error al obtener usuarios\n", error);
+    });
+}
 
 // Función para renderizar la tabla
 function renderUsers(arrayUsers) {
   tableBodyHTML.innerHTML = "";
-  arrayUsers.forEach((user, index) => {
+  arrayUsers.forEach((user) => {
     tableBodyHTML.innerHTML += `<tr>
-                                      <td class="user-name">${user.fullname}</td>
-                                      <td class="user-email">${user.email}</td>
-                                      <td class="user-phone">${user.phone}</td>
-                                      <td class="user-birthdate">${user.bornDate}</td>
-                                      <td class="user-actions">
-                                        <button class="btn btn-danger btn-sm" data-borrar="${user.id}">
-                                          <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                        <button class="btn btn-primary btn-sm" data-edit="${user.id}" >
-                                          <i class="fa-solid fa-pencil"></i>
-                                        </button>
-                                      </td>
-                                    </tr>`;
+                                    <td class="user-name"><img src="${
+                                      user.avatar
+                                        ? user.avatar
+                                        : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+                                    }" alt="${user.fullName}" class="user-avatar"></td> 
+                                    <td class="user-name">${user.fullName}</td>
+                                    <td class="user-email">${user.email}</td>
+                                    <td class="user-phone">${user.phone}</td>
+                                    <td class="user-birthdate">${transformTimestampToDate(
+                                      user.bornDate
+                                    )}</td>
+                                    <td class="user-actions">
+                                      <button class=" acction btn btn-danger btn-sm" data-borrar="${
+                                        user.id
+                                      }">
+                                        <i class="fa-solid fa-trash"></i>
+                                      </button>
+                                      <button class=" acction btn btn-primary btn-sm" data-edit="${
+                                        user.id
+                                      }" >
+                                        <i class="fa-solid fa-pencil"></i>
+                                      </button>
+                                    </td>
+                                  </tr>`;
   });
+  updateEditButtons();
+  updateDeleteButtons();
 }
 
-renderUsers(baseUsers);
+function transformTimestampToDate(dateTimeStamp) {
+  const dateFormat = new Intl.DateTimeFormat("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
+  const offset = new Date().getTimezoneOffset() * 60 * 1000;
+  dateTimeStamp += offset;
+  const date = dateFormat.format(dateTimeStamp)
+
+  return date;
+}
 
 // Función para ordenar a los usuarios
-// todo: Editar la función para que ordene a los usuarios en la API
 document.getElementById("sortAsc").addEventListener("click", sortAsc);
 document.getElementById("sortDesc").addEventListener("click", sortDesc);
 
 function sortAsc() {
   const collator = new Intl.Collator(undefined, {
-    sensitivity: 'base'
+    sensitivity: "base",
   });
-  baseUsers.sort((a, b) => {
-    return collator.compare(a.fullname, b.fullname)
+  users.sort((a, b) => {
+    return collator.compare(a.fullName, b.fullName);
   });
-  renderUsers(baseUsers);
+  renderUsers(users);
 }
 
 function sortDesc() {
   const collator = new Intl.Collator(undefined, {
-    sensitivity: 'base'
+    sensitivity: "base",
   });
-  baseUsers.sort((a, b) => {
-    return collator.compare(b.fullname, a.fullname)
+  users.sort((a, b) => {
+    return collator.compare(b.fullName, a.fullName);
   });
-  renderUsers(baseUsers);
+  renderUsers(users);
 }
 
 // Función para buscar a los usuarios
 inputSearchHTML.addEventListener("keyup", (evento) => inputSearch(evento));
 function inputSearch(evt) {
-    const search = evt.target.value.toLowerCase();
-    const filteredUsers = baseUsers.filter((usr) => {
-      if (usr.fullname.toLowerCase().includes(search)) {
-        return true;
-      }
-      return false;
-    })
-    renderUsers(filteredUsers);
+  const search = evt.target.value.toLowerCase();
+  const filteredUsers = users.filter((usr) => {
+    if (usr.fullName.toLowerCase().includes(search)) {
+      return true;
+    }
+    return false;
+  });
+  renderUsers(filteredUsers);
+}
+
+// Función de alta o edición de usuario
+
+userFormHTML.addEventListener("submit", (evento) => {
+  evento.preventDefault();
+  const el = evento.target.elements;
+  const usuarioEnForm = {
+    fullName: el.fullName.value,
+    email: el.email.value,
+    phone: el.phone.value,
+    bornDate: new Date(el.bornDate.value).getTime(),
+    avatar: el.avatar.value,
+  };
+
+  if (isEditing) {
+    //Buscar un usuario y reemplazarlo
+    axios
+      .put(`${baseUrl}/users/${isEditing}`, usuarioEnForm)
+      .then(() => {
+        getUsers();
+        Swal.fire({
+          icon: "success",
+          title: "¡Genial!",
+          text: "El usuario fue editado correctamente",
+        });
+      })
+      .catch((error) => {
+        Swal.fire({
+          icon: "error",
+          title: "¡Algo salió mal!",
+          text: "No pudimos registrar los cambios",
+        });
+        console.log("Error al editar usuario\n", error);
+      });
+  } else {
+    //Agregar un usuario nuevo
+    axios
+      .post(`${baseUrl}/users`, usuarioEnForm)
+      .then(() => {
+        getUsers();
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        });
+        Toast.fire({
+          icon: "success",
+          title: "Usuario registrado con éxito",
+        });
+      })
+      .catch(() => {
+        Swal.fire({
+          icon: "error",
+          title: "¡Algo salió mal!",
+          text: "No pudimos registrar los cambios",
+        });
+      });
   }
-// todo: Función para agregar usuarios nuevos
-// todo: Función para editar a los usuarios por ID
-// todo: Función para borrar a los usuarios por ID
+
+  //Reset el formulario
+  isEditing = null;
+  formContainerHTML.classList.remove("form-edit");
+  btnSubmitHTML.classList.add("btn-primary");
+  btnSubmitHTML.classList.remove("btn-success");
+  formTitleHTML.innerHTML = "Registro";
+  btnSubmitHTML.innerText = "Registrar";
+
+  userFormHTML.reset();
+  el.fullName.focus();
+});
+
+// Actualizar los botones de editar
+function updateEditButtons() {
+  const userButtonEdit = document.querySelectorAll("button[data-edit]");
+
+  userButtonEdit.forEach((btn) => {
+    btn.addEventListener("click", (evt) => {
+      const id = evt.currentTarget.dataset.edit;
+      completeUserForm(id);
+    });
+  });
+}
+
+function completeUserForm(idUser) {
+  isEditing = idUser;
+  const user = users.find((usr) => {
+    if (usr.id === idUser) {
+      return true;
+    }
+    return false;
+  });
+
+  if (!user) {
+    Swal.fire("Error", "No se encontro usuario");
+    return;
+  }
+  // Rellenar el formulario con los datos de este usuario
+  const el = userFormHTML.elements;
+
+  el.fullName.value = user.fullName;
+  el.email.value = user.email;
+  el.phone.value = user.phone;
+  el.bornDate.valueAsNumber = user.bornDate;
+  el.avatar.value = user.avatar;
+
+  formContainerHTML.classList.add("form-edit");
+  btnSubmitHTML.classList.remove("btn-primary");
+  btnSubmitHTML.classList.add("btn-success");
+  formTitleHTML.innerHTML = `Editar usuario: </br>${user.fullName}`;
+  btnSubmitHTML.innerText = "Editar";
+}
+
+// Actualizar los botones de eliminar y eliminar usuario
+function updateDeleteButtons() {
+  const userButtonsDelete = document.querySelectorAll("button[data-borrar]");
+  userButtonsDelete.forEach((btn) => {
+    btn.addEventListener("click", (evt) => {
+      const id = evt.currentTarget.dataset.borrar;
+
+      Swal.fire({
+        title: "¿Estás seguro?",
+        text: "Estás por eliminar un usuario",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#2b285b",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          axios
+            .delete(`${baseUrl}/users/${id}`)
+            .then(() => {
+              getUsers();
+              Swal.fire({
+                icon: "success",
+                title: "¡Genial!",
+                text: "El usuario fue eliminado correctamente",
+              });
+            })
+            .catch(() => {
+              Swal.fire({
+                icon: "error",
+                title: "¡Algo salió mal!",
+                text: "No se pudo eliminar el usuario",
+              });
+            });
+        }
+      });
+    });
+  });
+}

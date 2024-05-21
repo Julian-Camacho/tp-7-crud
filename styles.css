@@ -1,0 +1,55 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+.user-avatar{
+    width: 60px;
+    height: 60px;
+    object-fit: conver;
+    border-radius: 50%;
+}
+
+.form-edit {
+    background-color:aquamarine !important;
+}
+
+.form-cont {
+    background-color: lightblue;
+    max-width: 400px;
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.submit {
+    margin-top: 10px;
+}
+
+.main-container {
+    display: flex; 
+    justify-content: center;
+}
+
+#table-container {
+    margin-top: 20px;
+}
+
+.acction {
+    margin: 5px;
+}
+
+@media screen and (max-width: 1280px){
+    .main-container {
+        flex-direction: column;
+        align-items: center;
+    }
+}
